@@ -206,7 +206,7 @@
                 const daysStr = days > 0 ? `${days} Day(s) ` : '';
                 const hoursStr = hours > 0 ? `${hours} hr(s) ` : '';
                 const minutesStr = minutes > 0 ? `${minutes} min` : (days === 0 && hours === 0) ? '0 min' : '';
-                displayTime = `<span class="math-inline">\{daysStr\}</span>{hoursStr}${minutesStr}`.trim();
+                displayTime = `${daysStr}${hoursStr}${minutesStr}`.trim();
                 if (displayTime === '') {
                     displayTime = `${seconds} sec`; // Show seconds if all else is zero
                 }
@@ -229,25 +229,25 @@
                 currentTotalSeconds = resources.time * troopCount;
 
                 resultDiv.innerHTML = `
-                    Total Meat: ${formatNumber(totalMeat)}<br>
-                    Total Wood: ${formatNumber(totalWood)}<br>
-                    Total Coal: ${formatNumber(totalCoal)}<br>
-                    Total Iron: <span class="math-inline">\{formatNumber\(totalIron\)\}<br\>
-Total Healing Time\: <span id\="healingTimeDisplay"\></span>{formatTime(currentTotalSeconds)}</span>
-                    <div class="time-unit-selector">
-                        <input type="radio" id="unitDays" name="timeUnit" value="days" onchange="updateTimeUnit()">
-                        <label for="unitDays">Day(s)</label>
+                Total Meat: ${formatNumber(totalMeat)}<br>
+                Total Wood: ${formatNumber(totalWood)}<br>
+                Total Coal: ${formatNumber(totalCoal)}<br>
+                Total Iron: ${formatNumber(totalIron)}<br>
+                Total Healing Time: <span id="healingTimeDisplay">${formatTime(currentTotalSeconds)}</span>
+                <div class="time-unit-selector">
+                <input type="radio" id="unitDays" name="timeUnit" value="days" onchange="updateTimeUnit()">
+                <label for="unitDays">Day(s)</label>
 
-                        <input type="radio" id="unitHours" name="timeUnit" value="hours" onchange="updateTimeUnit()">
-                        <label for="unitHours">Hour(s)</label>
+                <input type="radio" id="unitHours" name="timeUnit" value="hours" onchange="updateTimeUnit()">
+                <label for="unitHours">Hour(s)</label>
 
-                        <input type="radio" id="unitMinutes" name="timeUnit" value="minutes" onchange="updateTimeUnit()">
-                        <label for="unitMinutes">Minute(s)</label>
+                <input type="radio" id="unitMinutes" name="timeUnit" value="minutes" onchange="updateTimeUnit()">
+                <label for="unitMinutes">Minute(s)</label>
 
-                        <input type="radio" id="unitDefault" name="timeUnit" value="default" onchange="updateTimeUnit()" checked>
-                        <label for="unitDefault">Days, Hours, Min</label>
-                    </div>
-                `;
+                <input type="radio" id="unitDefault" name="timeUnit" value="default" onchange="updateTimeUnit()" checked>
+                <label for="unitDefault">Days, Hours, Min</label>
+            </div>
+        `;
                 resultDiv.style.display = 'block';
             } else {
                 resultDiv.innerHTML = "Error: Invalid troop type or camp level selected.";
