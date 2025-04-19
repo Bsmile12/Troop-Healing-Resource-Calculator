@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Troop Healing Resource Calculator</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'sans-serif';
+            background-color: #f3f4f6;
+            color: #374151;
+            margin: 0;
+            padding-bottom: 60px;
+            position: relative;
+        }
+        .container {
+            max-width: 768px;
+            margin: 40px auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #1e293b;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #4b5563;
+        }
+        select, input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #4f46e5;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #4338ca;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #e5e7eb;
+            border-radius: 4px;
+            color: #374151;
+            font-weight: bold;
+            display: none;
+        }
+        .glassmorphism-input {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        .glassmorphism-input label, .glassmorphism-input select, .glassmorphism-input input[type="number"] {
+            background: transparent;
+            border: none;
+        }
+        .time-unit-selector {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+            align-items: center;
+        }
+        .time-unit-selector label {
+            font-weight: normal;
+        }
+        .flag-container-fixed {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            display: flex;
+            gap: 10px;
+            z-index: 100;
+        }
+        .flag {
+            width: 30px;
+            height: 20px;
+            background-size: cover;
+            background-position: center;
+            border: 1px solid #d1d5db;
+            cursor: pointer;
+        }
+        .uk-flag {
+            background-image: url('https://cdnjs.cloudflare.com/ajax/libs/flag-icon-css/3.5.0/flags/4x3/gb.svg');
+        }
+        .th-flag {
+            background-image: url('https://cdnjs.cloudflare.com/ajax/libs/flag-icon-css/3.5.0/flags/4x3/th.svg');
+        }
+        .cn-flag {
+            background-image: url('https://cdnjs.cloudflare.com/ajax/libs/flag-icon-css/3.5.0/flags/4x3/cn.svg');
+        }
+        .ru-flag {
+            background-image: url('https://cdnjs.cloudflare.com/ajax/libs/flag-icon-css/3.5.0/flags/4x3/ru.svg');
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <div class="container">
+        <h1 class="text-3xl font-semibold mb-6 text-center text-gray-800">Troop Healing Resource Calculator</h1>
+
+        <div class="glassmorphism-input">
+            <label for="troopType">Troop Type:</label>
+            <select id="troopType" class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md">
+                <option value="marksman">Marksman</option>
+                <option value="infantry">Infantry</option>
+                <option value="lancer">Lancer</option>
+            </select>
+        </div>
+
+        <div class="glassmorphism-input">
+            <label for="campLevel">Camp Level:</label>
+            <select id="campLevel" class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md">
+                <option value="9">Level IX</option>
+                <option value="10">Level X</option>
+            </select>
+        </div>
+
+        <div class="glassmorphism-input">
+            <label for="troopCount">Number of Troops to Heal:</label>
+            <input type="number" id="troopCount" class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md" min="1" value="1">
+        </div>
+
+        <button onclick="calculateResources()" class="w-full">Calculate Healing Cost</button>
+
+        <div id="result" class="mt-8 p-4 bg-gray-200 rounded-md font-semibold"></div>
+
+        <div class="flag-container-fixed">
+            <div class="flag uk-flag" onclick="changeLanguage('en')"></div>
+            <div class="flag th-flag" onclick="changeLanguage('th')"></div>
+            <div class="flag cn-flag" onclick="changeLanguage('zh')"></div>
+            <div class="flag ru-flag" onclick="changeLanguage('ru')"></div>
+        </div>
+    </div>
+
+    <script>
+        const troopData = {
+            marksman: {
+                9: { meat: 87, wood: 129, coal: 22, iron: 7, time: 2 },
+                10: { meat: 174, wood: 258, coal: 43, iron: 14, time: 3 }
+            },
+            infantry: {
+                9: { meat: 139, wood: 105, coal: 24, iron: 5, time: 2 },
+                10: { meat: 279, wood: 209, coal: 49, iron: 10, time: 3 }
+            },
+            lancer: {
+                9: { meat: 122, wood: 115, coal: 24, iron: 6, time: 2 },
+                10: { meat: 244, wood: 230, coal: 47, iron: 11 }
+            }
+        };
+
+        let currentTotalSeconds = 0;
+
+        function formatNumber(num) {
+            if (num >= 1000000000) {
+                return (num / 1000000000).toFixed(1) + 'B';
+            } else if (num >= 1000000) {
+                return (num / 1000000).toFixed(1) + 'M';
+            } else if (num >= 1000) {
+                return (num / 1000).toFixed(1) + 'K';
+            }
+            return num.toLocaleString();
+        }
+
+        function formatTime(totalSeconds, unit = 'default') {
+            let displayTime = '';
+            let remainingSeconds = totalSeconds;
+
+            const days = Math.floor(remainingSeconds / (3600 * 24));
+            remainingSeconds %= (3600 * 24);
+            const hours = Math.floor(remainingSeconds / 3600);
+            remainingSeconds %= 3600;
+            const minutes = Math.floor(remainingSeconds / 60);
+            const seconds = remainingSeconds % 60;
+
+            const formatNumberFull = (num) => num.toLocaleString();
+
+            if (unit === 'days') {
+                displayTime = `${formatNumberFull(totalSeconds / (3600 * 24))} Day(s)`;
+            } else if (unit === 'hours') {
+                displayTime = `${formatNumberFull(totalSeconds / 3600)} Hour(s)`;
+            } else if (unit === 'minutes') {
+                displayTime = `${formatNumberFull(totalSeconds / 60)} Minute(s)`;
+            } else { // default: Days, Hours, Minutes
+                const daysStr = days > 0 ? `${days} Day(s) ` : '';
+                const hoursStr = hours > 0 ? `${hours} hr(s) ` : '';
+                const minutesStr = minutes > 0 ? `${minutes} min` : (days === 0 && hours === 0) ? '0 min' : '';
+                displayTime = `<span class="math-inline">\{daysStr\}</span>{hoursStr}${minutesStr}`.trim();
+                if (displayTime === '') {
+                    displayTime = `${seconds} sec`; // Show seconds if all else is zero
+                }
+            }
+            return displayTime;
+        }
+
+        function calculateResources() {
+            const troopType = document.getElementById('troopType').value;
+            const campLevel = parseInt(document.getElementById('campLevel').value);
+            const troopCount = parseInt(document.getElementById('troopCount').value);
+            const resultDiv = document.getElementById('result');
+
+            if (troopData[troopType] && troopData[troopType][campLevel]) {
+                const resources = troopData[troopType][campLevel];
+                const totalMeat = resources.meat * troopCount;
+                const totalWood = resources.wood * troopCount;
+                const totalCoal = resources.coal * troopCount;
+                const totalIron = resources.iron * troopCount;
+                currentTotalSeconds = resources.time * troopCount;
+
+                resultDiv.innerHTML = `
+                    Total Meat: ${formatNumber(totalMeat)}<br>
+                    Total Wood: ${formatNumber(totalWood)}<br>
+                    Total Coal: ${formatNumber(totalCoal)}<br>
+                    Total Iron: <span class="math-inline">\{formatNumber\(totalIron\)\}<br\>
+Total Healing Time\: <span id\="healingTimeDisplay"\></span>{formatTime(currentTotalSeconds)}</span>
+                    <div class="time-unit-selector">
+                        <input type="radio" id="unitDays" name="timeUnit" value="days" onchange="updateTimeUnit()">
+                        <label for="unitDays">Day(s)</label>
+
+                        <input type="radio" id="unitHours" name="timeUnit" value="hours" onchange="updateTimeUnit()">
+                        <label for="unitHours">Hour(s)</label>
+
+                        <input type="radio" id="unitMinutes" name="timeUnit" value="minutes" onchange="updateTimeUnit()">
+                        <label for="unitMinutes">Minute(s)</label>
+
+                        <input type="radio" id="unitDefault" name="timeUnit" value="default" onchange="updateTimeUnit()" checked>
+                        <label for="unitDefault">Days, Hours, Min</label>
+                    </div>
+                `;
+                resultDiv.style.display = 'block';
+            } else {
+                resultDiv.innerHTML = "Error: Invalid troop type or camp level selected.";
+                resultDiv.style.display = 'block';
+            }
+        }
+
+        function updateTimeUnit() {
+            const selectedUnit = document.querySelector('input[name="timeUnit"]:checked').value;
+            const healingTimeDisplay = document.getElementById('healingTimeDisplay');
+            healingTimeDisplay.textContent = formatTime(currentTotalSeconds, selectedUnit);
+        }
+
+        function changeLanguage(lang) {
+            const labels = document.querySelectorAll('label');
+            const buttons = document.querySelectorAll('button');
+            const heading = document.querySelector('h1');
+            const selectOptions = {
+                troopType: ['Marksman', 'Infantry', 'Lancer'],
+                campLevel: ['Level IX', 'Level X']
+            };
+            const selectElements = {
+                troopType: document.getElementById('troopType'),
+                campLevel: document.getElementById('campLevel')
+            };
+            const defaultTimeLabel = document.querySelector('.time-unit-selector label[for="unitDefault"]');
+            const daysLabel = document.querySelector('.time-unit-selector label[for="unitDays"]');
+            const hoursLabel = document.querySelector('.time-unit-selector label[for="unitHours"]');
+            const minutesLabel = document.querySelector('.time-unit-selector label[for="unitMinutes"]');
+
+            if (lang === 'th') {
+                heading.textContent = 'เครื่องคำนวณทรัพยากรการรักษาทหาร';
+                labels[0].textContent = 'ประเภททหาร:';
+                labels[1].textContent = 'ระดับค่าย:';
+                labels[2].textContent = 'จำนวนทหารที่รักษา:';
+                buttons[0].textContent = 'คำนวณค่ารักษา';
+                defaultTimeLabel.textContent = 'วัน, ชั่วโมง, นาที';
+                daysLabel.textContent = 'วัน';
+                hoursLabel.textContent = 'ชั่วโมง';
+                minutesLabel.textContent = 'นาที';
+                for (const selectId in selectElements) {
+                    if (selectOptions[selectId]) {
+                        const select = selectElements[selectId];
+                        for (let i = 0; i < select.options.length; i++) {
+                            select.options[i].textContent = selectOptions[selectId][i];
+                        }
+                    }
+                }
+                // แปลผลลัพธ์ล่าสุด (ถ้ามี)
+                const resultText = document.getElementById('result').textContent;
+                if (resultText) {
+                    translateResult('th', resultText);
+                }
+            } else if (lang === 'zh') {
+                heading.textContent = '部队治疗资源计算器';
+                labels[0].textContent = '部队类型:';
+                labels[1].textContent = '营地等级:';
+                labels[2].textContent = '治疗士兵数量:';
+                buttons[0].textContent = '计算治疗成本';
+                defaultTimeLabel.textContent = '天, 小时, 分钟';
+                daysLabel.textContent = '天';
+                hoursLabel.textContent = '小时';
+                minutesLabel.textContent = '分钟';
+                for (const selectId in selectElements) {
+                    if (selectOptions[selectId]) {
+                        const select = selectElements[selectId];
+                        for (let i = 0; i < select.options.length; i++) {
+                            select.options[selectId][i].textContent = selectOptions[selectId][i];
+                        }
+                    }
+                }
+                // แปลผลลัพธ์ล่าสุด (ถ้ามี)
+                const resultText = document.getElementById('result').textContent;
+                if (resultText) {
+                    translateResult('zh', resultText);
+                }
+            } else if (lang === 'ru') {
+                heading.textContent = 'Калькулятор ресурсов для лечения войск';
+                labels[0].textContent = 'Тип войск:';
+                labels[1].textContent = 'Уровень лагеря:';
+                labels[2].textContent = 'Количество войск для лечения:';
+                buttons[0].textContent = 'Рассчитать стоимость лечения';
+                defaultTimeLabel.textContent = 'Дни, Часы, Мин';
+                daysLabel.textContent = 'Дни';
+                hoursLabel.textContent = 'Часы';
+                minutesLabel.textContent = 'Мин';
+                for (const selectId in selectElements) {
+                    if (selectOptions[selectId]) {
+                        const select = selectElements[selectId];
+                        for (let i = 0; i < select.options.length; i++) {
+                            select.options[i].textContent = selectOptions[selectId][i];
+                        }
+                    }
+                }
+                // แปลผลลัพธ์ล่าสุด (ถ้ามี)
+                const resultText = document.getElementById('result').textContent;
+                if (resultText) {
+                    translateResult('ru', resultText);
+                }
+            } else { // Default to English
+                heading.textContent = 'Troop Healing Resource Calculator';
+                labels[0].textContent = 'Troop Type:';
+                labels[1].textContent = 'Camp Level:';
+                labels[2].textContent = 'Number of Troops to Heal:';
+                buttons[0].textContent = 'Calculate Healing Cost';
+                defaultTimeLabel.textContent = 'Days, Hours, Min';
+                daysLabel.textContent = 'Day(s)';
+                hoursLabel.textContent = 'Hour(s)';
+                minutesLabel.textContent = 'Minute(s)';
+                for (const selectId in selectElements) {
+                    if (selectOptions[selectId]) {
+                        const select = selectElements[selectId];
+                        for (let i = 0; i < select.options.length; i++) {
+                            select.options[i].textContent = selectOptions[selectId][i];
+                        }
+                    }
+                }
+                // แสดงผลลัพธ์ล่าสุดเป็นภาษาอังกฤษ (ถ้ามี)
+                const resultText = document.getElementById('result').textContent;
+                if (resultText) {
+                    translateResult('en', resultText);
+                }
+            }
+        }
+
+        function translateResult(lang, textToTranslate) {
+            const translationResultDiv = document.getElementById('result');
+
+            // *** ส่วนนี้จะต้องเชื่อมต่อกับ API แปลภาษาจริง ***
+            // ตัวอย่างการทำงานแบบจำลอง (แทนที่ด้วยการเรียก API จริง)
+            let translatedText = "";
+            if (lang === 'th') {
+                translatedText = `(แปลเป็นภาษาไทยแล้ว): ${textToTranslate}`;
+            } else if (lang === 'zh') {
+                translatedText = `(翻译成中文): ${textToTranslate}`;
+            } else if (lang === 'ru') {
+                translatedText = `(Переведено на русский): ${textToTranslate}`;
+            } else {
+                translatedText = textToTranslate; // แสดงผลเดิมหากเป็นภาษาอังกฤษ
+            }
+
+            translationResultDiv.innerHTML = translatedText;
+            translationResultDiv.style.display = 'block';
+        }
+    </script>
+</body>
+</html>
